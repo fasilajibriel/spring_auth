@@ -1,7 +1,9 @@
 package com.elevateuet.springauth.role.controller;
 
+import com.elevateuet.springauth.role.dto.response.RoleResponse;
+import com.elevateuet.springauth.role.mapper.RoleMapper;
 import com.elevateuet.springauth.role.model.Role;
-import com.elevateuet.springauth.role.repository.RoleRepository;
+import com.elevateuet.springauth.role.service.RoleService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,35 +13,37 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/roles")
 public class RolesController {
-    private final RoleRepository roleRepository;
+    private final RoleService roleService;
+    private final RoleMapper roleMapper;
 
-    public RolesController(RoleRepository roleRepository) {
-        this.roleRepository = roleRepository;
+    public RolesController(RoleService roleService, RoleMapper roleMapper) {
+        this.roleService = roleService;
+        this.roleMapper = roleMapper;
     }
 
     @GetMapping
     @PreAuthorize("hasAuthority('view_roles')")
-    public List<Role> getRoles() {
-        return roleRepository.findAll();
+    public List<RoleResponse> getRoles() {
+        return roleService.findAll().stream().map(roleMapper::toResponse).toList();
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('view_role_detail')")
     public Role getRole(@PathVariable UUID id) {
-        return roleRepository.findById(id).orElseThrow();
+        return roleService.findById(id);
     }
 
     @PostMapping
     @PreAuthorize("hasAuthority('create_roles')")
     public Role createRole(@RequestBody Role role) {
-        return roleRepository.save(role);
+        return roleService.save(role);
     }
 
     @PostMapping("/{id}/permissions")
     @PreAuthorize("hasAuthority('edit_role_permissions')")
     public Role updatePermissions(@PathVariable UUID id, @RequestBody Role role) {
-        Role existing = roleRepository.findById(id).orElseThrow();
+        Role existing = roleService.findById(id);
         existing.setPermissions(role.getPermissions());
-        return roleRepository.save(existing);
+        return roleService.save(existing);
     }
 }

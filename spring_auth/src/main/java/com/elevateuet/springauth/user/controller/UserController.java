@@ -2,8 +2,10 @@ package com.elevateuet.springauth.user.controller;
 
 import com.elevateuet.springauth.access.dto.AccessInfoDto;
 import com.elevateuet.springauth.access.service.AccessInfoService;
+import com.elevateuet.springauth.user.dto.response.UserResponse;
+import com.elevateuet.springauth.user.mapper.UserMapper;
 import com.elevateuet.springauth.user.model.User;
-import com.elevateuet.springauth.user.repository.UserRepository;
+import com.elevateuet.springauth.user.service.UserService;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,18 +16,27 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/me")
 public class UserController {
-    private final UserRepository userRepository;
+    private final UserService userService;
+    private final UserMapper userMapper;
     private final AccessInfoService accessInfoService;
 
-    public UserController(UserRepository userRepository, AccessInfoService accessInfoService) {
-        this.userRepository = userRepository;
+    public UserController(UserService userService, UserMapper userMapper, AccessInfoService accessInfoService) {
+        this.userService = userService;
+        this.userMapper = userMapper;
         this.accessInfoService = accessInfoService;
+    }
+
+    @GetMapping
+    public UserResponse getMe(Authentication authentication) {
+        String email = (String) authentication.getPrincipal();
+        User user = userService.findByEmail(email);
+        return userMapper.toResponse(user);
     }
 
     @GetMapping("/access-info")
     public List<AccessInfoDto> getAccessInfo(Authentication authentication) {
         String email = (String) authentication.getPrincipal();
-        User user = userRepository.findByEmail(email).orElseThrow();
+        User user = userService.findByEmail(email);
         return accessInfoService.buildAccessInfo(user);
     }
 }

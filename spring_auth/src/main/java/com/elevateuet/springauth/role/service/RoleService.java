@@ -17,4 +17,12 @@ public class RoleService {
     public List<Role> findAll() {
         return roleRepository.findAll();
     }
+
+    public Role findById(java.util.UUID id) {
+        return roleRepository.findById(id).orElseThrow();
+    }
+
+    public Role save(Role role) {
+        return roleRepository.save(role);
+    }
 }
